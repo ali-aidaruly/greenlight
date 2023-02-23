@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"github.com/ali-aidaruly/greenlight/internal/data"
 	"github.com/ali-aidaruly/greenlight/internal/validator"
+	"github.com/felixge/httpsnoop"
 	"golang.org/x/time/rate"
 	"net"
 	"net/http"
@@ -209,5 +211,66 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) metrics(next http.Handler) http.Handler {
+	totalRequestsReceived := expvar.NewInt("total_requests_received")
+	totalResponsesSent := expvar.NewInt("total_responses_sent")
+	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_μs")
+
+	totalResponsesSentByStatus := expvar.NewMap("total_responses_sent_by_status")
+
+	expvar.Publish("active_request_number", expvar.Func(func() interface{} {
+		return totalRequestsReceived.Value() - totalResponsesSent.Value()
+	}))
+
+	A, B := 0, 0
+	mux := sync.Mutex{}
+	requestsBetweenCallsFn := func() int {
+		mux.Lock()
+		defer mux.Unlock()
+
+		A, B = B, int(totalRequestsReceived.Value())
+
+		return B - A
+	}
+
+	tA, tB := time.Now(), time.Now()
+
+	expvar.Publish("average_number_of_requests_per_second_between_calls", expvar.Func(func() interface{} {
+		tA, tB = tB, time.Now()
+		subtr := int(tB.Sub(tA).Seconds())
+		if subtr == 0 {
+			subtr++
+		}
+
+		w := requestsBetweenCallsFn()
+
+		return w / subtr
+	}))
+
+	ptA, ptB := 0, 0
+	expvar.Publish("average_processing_time_between_calls", expvar.Func(func() interface{} {
+		ptA, ptB = ptB, int(totalProcessingTimeMicroseconds.Value())
+
+		w := requestsBetweenCallsFn()
+		if w == 0 {
+			w++
+		}
+
+		return (ptB - ptA) / w
+	}))
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		totalRequestsReceived.Add(1)
+
+		metrics := httpsnoop.CaptureMetrics(next, w, r)
+
+		totalResponsesSent.Add(1)
+
+		totalProcessingTimeMicroseconds.Add(metrics.Duration.Microseconds())
+
+		totalResponsesSentByStatus.Add(http.StatusText(metrics.Code), 1)
 	})
 }
