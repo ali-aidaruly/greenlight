@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	buildTime string
 	version   string
+	buildTime string
 )
 
 type config struct {
