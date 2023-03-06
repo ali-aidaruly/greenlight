@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/ali-aidaruly/greenlight/internal/validator"
 	"github.com/lib/pq"
-	"time"
 )
 
 type Movie struct {

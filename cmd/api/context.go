@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/ali-aidaruly/greenlight/internal/data"
 	"net/http"
+
+	"github.com/ali-aidaruly/greenlight/internal/data"
 )
 
 type contextKey string

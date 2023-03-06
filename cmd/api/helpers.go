@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ali-aidaruly/greenlight/internal/validator"
-	"github.com/julienschmidt/httprouter"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/ali-aidaruly/greenlight/internal/validator"
+	"github.com/julienschmidt/httprouter"
 )
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {

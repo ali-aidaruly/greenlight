@@ -6,8 +6,9 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base32"
-	"github.com/ali-aidaruly/greenlight/internal/validator"
 	"time"
+
+	"github.com/ali-aidaruly/greenlight/internal/validator"
 )
 
 const (

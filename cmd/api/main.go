@@ -6,15 +6,16 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
-	"github.com/ali-aidaruly/greenlight/internal/data"
-	"github.com/ali-aidaruly/greenlight/internal/jsonlog"
-	"github.com/ali-aidaruly/greenlight/internal/mailer"
-	_ "github.com/lib/pq"
 	"os"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ali-aidaruly/greenlight/internal/data"
+	"github.com/ali-aidaruly/greenlight/internal/jsonlog"
+	"github.com/ali-aidaruly/greenlight/internal/mailer"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -43,9 +44,11 @@ type config struct {
 		password string
 		sender   string
 	}
-
 	cors struct {
 		trustedOrigins []string
+	}
+	jwt struct {
+		secret string
 	}
 }
 
@@ -83,6 +86,8 @@ func main() {
 		cfg.cors.trustedOrigins = strings.Fields(val)
 		return nil
 	})
+
+	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "", "JWT secret")
 
 	displayVersion := flag.Bool("version", false, "Display version and exit")
 
